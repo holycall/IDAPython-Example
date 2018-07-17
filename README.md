@@ -38,3 +38,16 @@ GetOperandValue(ea, 0)
 GetOperandValue(ea, 1)
 ```
 
+## Get a string at an address in a static image
+```Python
+def get_string(ea):
+    out = ""
+    while True:
+        byt = idc.Byte(ea)
+        if byt != 0:
+            out += chr(byt)
+        else:
+            break
+        ea += 1
+    return out
+```
