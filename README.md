@@ -51,3 +51,8 @@ def get_string(ea):
         ea += 1
     return out
 ```
+
+## Get Entrypoint
+```Python
+BeginEA()
+```
