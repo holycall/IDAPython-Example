@@ -1,16 +1,16 @@
-# IDAPython Example
+# IDAPython 7.5 Example
 
 ## Get image base, end address, and size
 ```Python
 image_base = idaapi.get_imagebase()
 segs = list(Segments())
-image_end = SegEnd(segs[-1])
-image_size = SegEnd(segs[-1]) - image_base
+image_end = idc.get_segm_end(segs[-1])
+image_size = idc.get_segm_end(segs[-1]) - image_base
 ```
 
 ## Get function start address and end address
 ```Python
-ea = idc.ScreenEA()
+ea = idc.get_screen_ea()
 fn = idaapi.get_func(ea)
 fn_start_ea = fn.start_ea
 fn_end_ea = fn.end_ea
@@ -18,7 +18,7 @@ fn_end_ea = fn.end_ea
 
 ## Get an instruction size
 ```Python
-ItemSize(ea)
+get_item_size(ea)
 ```
 
 ## Disassemble one instruction
@@ -28,14 +28,14 @@ GetDisasm(ea)
 
 ## Get operand string from an instruction at an address
 ```Python
-GetOpnd(ea, 0)
-GetOpnd(ea, 1)
+print_operand(ea, 0)
+print_operand(ea, 1)
 ```
 
 ## Get operand value from an instruction at an address
 ```Python
-GetOperandValue(ea, 0)
-GetOperandValue(ea, 1)
+get_operand_value(ea, 0)
+get_operand_value(ea, 1)
 ```
 
 ## Get a string at an address in a static image
@@ -43,7 +43,7 @@ GetOperandValue(ea, 1)
 def get_string(ea):
     out = ""
     while True:
-        byt = idc.Byte(ea)
+        byt = idc.get_wide_byte(ea)
         if byt != 0:
             out += chr(byt)
         else:
@@ -54,5 +54,6 @@ def get_string(ea):
 
 ## Get Entrypoint
 ```Python
-BeginEA()
+ida_ida.inf_get_start_ea()	
 ```
+
