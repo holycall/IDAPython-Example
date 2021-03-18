@@ -1,4 +1,4 @@
-# IDAPython 7.5 Example
+# IDAPython 7.4 Example
 
 ## Get image base, end address, and size
 ```Python
@@ -57,3 +57,30 @@ def get_string(ea):
 ida_ida.inf_get_start_ea()	
 ```
 
+### Print instructions in a function using capstone disassembler
+```Python
+import ida_funcs
+import ida_kernwin
+import idautils
+import ida_bytes
+from capstone import Cs, CS_ARCH_X86, CS_MODE_64
+
+ea = ida_kernwin.get_screen_ea()
+fn = ida_funcs.get_func(ea)
+
+md = Cs(CS_ARCH_X86, CS_MODE_64)
+md.detail = True
+
+for ea in idautils.Heads(fn.start_ea, fn.end_ea):
+    ins = idautils.DecodeInstruction(ea)
+    ins_size = ins.size
+    byts = ida_bytes.get_bytes(ea, ins_size)
+    byts_str = ''
+    for byt in byts:
+        byts_str += f'{byt:02X}'
+    cs_ins_gen = md.disasm(byts, ea)
+    for cs_ins in cs_ins_gen:
+        mne = cs_ins.mnemonic
+        op_str = cs_ins.op_str
+        print(f'{ea:016X} {mne} {op_str} # {byts_str}')
+```
