@@ -57,7 +57,7 @@ def get_string(ea):
 ida_ida.inf_get_start_ea()	
 ```
 
-### Print instructions in a function using capstone disassembler
+## Print instructions in a function using capstone disassembler
 ```Python
 import ida_funcs
 import ida_kernwin
@@ -85,7 +85,7 @@ for ea in idautils.Heads(fn.start_ea, fn.end_ea):
         print(f'{ea:016X} {mne} {op_str} # {byts_str}')
 ```
 
-### Get cross references of stack variables in a function
+## Get cross references of stack variables in a function
 ```Python
 import idc, ida_ua, idautils, ida_bytes, ida_funcs
 
