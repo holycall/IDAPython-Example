@@ -1,4 +1,4 @@
-# IDAPython 7.4 Example
+# IDAPython 7.6 Example
 
 ## Get image base, end address, and size
 ```Python
