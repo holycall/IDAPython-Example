@@ -88,7 +88,7 @@ for ea in idautils.Heads(fn.start_ea, fn.end_ea):
 ## Get cross references of stack variables in a function
 ```Python
 import idc, ida_ua, idautils, ida_bytes, ida_funcs
-
+from typing import Dict
 
 def find_stack_members(func_ea):
     members = {}
@@ -104,27 +104,33 @@ def find_stack_members(func_ea):
     return members, base
 
 
-def find_stack_xrefs(func_offset):
+def find_stack_xrefs(func_offset) -> Dict[str, list[int, int]]:
+    """
+    Get cross references of each stack variables.
+    :param func_offset:
+    :return: variable name to list of an instruction address and its operand number.
+    """
     func_ea = ida_funcs.get_func(func_offset).start_ea
-    result = []
+    result = dict()
     members, stack_base = find_stack_members(func_ea)
     for func_item in idautils.FuncItems(func_ea):
         flags = ida_bytes.get_full_flags(func_item)
         stkvar = 0 if ida_bytes.is_stkvar0(flags) else 1 if ida_bytes.is_stkvar1(flags) else None
-        if not stkvar:
+        if stkvar is None:
             continue
         insn = ida_ua.insn_t()
         ida_ua.decode_insn(insn, func_item)
         op = insn.ops[stkvar]
         stack_offset = op.addr + idc.get_spd(func_item) + stack_base
         member = members[stack_offset]
-        # print("At offset {:x} stack member {} is referenced by operand number {}".format(func_item, member, stkvar))
-        result.append((func_item, member, stkvar))
+        result.setdefault(member, []).append((func_item, stkvar))
     return result
-    
-        
+
+
 if __name__ == "__main__":
     result = find_stack_xrefs(idc.here())
-    for func_item, member, stkvar in result:
-        print(f"{func_item:x} {member} op#:{stkvar}")
+    for member, lst in result.items():
+        print(f"{member}")
+        for addr, opn in lst:
+            print(f'{addr:x} op#:{opn}')
 ```
