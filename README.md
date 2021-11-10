@@ -84,3 +84,47 @@ for ea in idautils.Heads(fn.start_ea, fn.end_ea):
         op_str = cs_ins.op_str
         print(f'{ea:016X} {mne} {op_str} # {byts_str}')
 ```
+
+### Get cross references of stack variables in a function
+```Python
+import idc, ida_ua, idautils, ida_bytes, ida_funcs
+
+
+def find_stack_members(func_ea):
+    members = {}
+    base = None
+    frame = idc.get_func_attr(func_ea, idc.FUNCATTR_FRAME)
+    for frame_member in idautils.StructMembers(frame):
+        member_offset, member_name, _ = frame_member
+        members[member_offset] = member_name
+        if member_name == ' r':
+            base = member_offset
+    if not base:
+        raise ValueError("Failed identifying the stack's base address using the return address hidden stack member")
+    return members, base
+
+
+def find_stack_xrefs(func_offset):
+    func_ea = ida_funcs.get_func(func_offset).start_ea
+    result = []
+    members, stack_base = find_stack_members(func_ea)
+    for func_item in idautils.FuncItems(func_ea):
+        flags = ida_bytes.get_full_flags(func_item)
+        stkvar = 0 if ida_bytes.is_stkvar0(flags) else 1 if ida_bytes.is_stkvar1(flags) else None
+        if not stkvar:
+            continue
+        insn = ida_ua.insn_t()
+        ida_ua.decode_insn(insn, func_item)
+        op = insn.ops[stkvar]
+        stack_offset = op.addr + idc.get_spd(func_item) + stack_base
+        member = members[stack_offset]
+        # print("At offset {:x} stack member {} is referenced by operand number {}".format(func_item, member, stkvar))
+        result.append((func_item, member, stkvar))
+    return result
+    
+        
+if __name__ == "__main__":
+    result = find_stack_xrefs(idc.here())
+    for func_item, member, stkvar in result:
+        print(f"{func_item:x} {member} op#:{stkvar}")
+```
