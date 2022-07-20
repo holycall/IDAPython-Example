@@ -200,7 +200,11 @@ def fix_data_to_code(ea):
             if disasm.startswith('db'):
                 print(f'set as code @ {ea:x} {disasm}')
                 # I used ea + idc.get_item_size(ea) to get the next address because next_head function does not work well.
+                
                 next_ea = ea + idc.get_item_size(ea)
+                while idc.GetDisasm(next_ea).startswith('db'):
+                    next_ea += 1    
+                
                 print(f'executiong ida_bytes.del_items({next_ea:x})')
                 ida_bytes.del_items(next_ea)
                 ida_ua.create_insn(ea)
@@ -209,7 +213,7 @@ def fix_data_to_code(ea):
                 idc.auto_wait()
                 is_change = True
                 break
-            ea = idc.next_head(ea)
+            ea = ea + idc.get_item_size(ea)
         
 
 if __name__ == "__main__":
