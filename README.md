@@ -154,3 +154,65 @@ ida_kernwin.gen_disasm_text(text, fn_start, idc.get_item_end, False)
 for disasm_line in text: 
     print(disasm_line.line)
 ```
+
+## Set incorrectly analyzed data into code
+```python
+import idautils
+import idc
+import ida_kernwin
+import ida_funcs
+import ida_bytes
+import ida_ua
+    
+def fix_data_to_code(ea):
+    """
+    Fix incorrectly analyzed data to code.
+    Example:
+    .text:0000000140013257                 jz      loc_1400137B0
+    .text:0000000140013257 ; ---------------------------------------------------------------------------
+    .text:000000014001325D byte_14001325D  db 4Ch                  ; CODE XREF: sub_140012DB0+4A1↑j
+    .text:000000014001325D ;   } // starts at 140013031
+    .text:000000014001325E ; ---------------------------------------------------------------------------
+    .text:000000014001325E
+    .text:000000014001325E loc_14001325E:                          ; DATA XREF: .rdata:0000000140288EA8↓o
+    .text:000000014001325E ;   try {
+    .text:000000014001325E                 mov     ecx, esi
+
+    When we try to make code by IDAPython create_insn function directly at 14001325D, it will not change anything. 
+    Instead we first need to undefine the next instruction at 14001325E and then make 14001325D as code.
+    """
+    # get function start and end address
+    pfn = ida_funcs.get_func(ea)
+    fn_start = pfn.start_ea
+    fn_end = pfn.end_ea
+    ea = fn_start
+    is_change = True
+
+    # repeat until all data is converted into code
+    while is_change:
+        is_change = False
+        # iterate each items in a function
+        # I didn't use FuncItems because the function omits the data items. 
+        while ea < fn_end:
+            disasm = idc.GetDisasm(ea)
+            # Because is_code and is_data function do not work well
+            # I instead use the disasm text to check if it is code or data. 
+            if disasm.startswith('db'):
+                print(f'set as code @ {ea:x} {disasm}')
+                # I used ea + idc.get_item_size(ea) to get the next address because next_head function does not work well.
+                next_ea = ea + idc.get_item_size(ea)
+                print(f'executiong ida_bytes.del_items({next_ea:x})')
+                ida_bytes.del_items(next_ea)
+                ida_ua.create_insn(ea)
+
+                # auto_wait is mandatory to make IDA to finish the automatic analysis. 
+                idc.auto_wait()
+                is_change = True
+                break
+            ea = idc.next_head(ea)
+        
+
+if __name__ == "__main__":
+    ea = idc.here()
+    fix_data_to_code(ea)
+```
