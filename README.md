@@ -1,4 +1,55 @@
-# IDAPython 7.7 Example
+# IDAPython 8.2 Example
+
+# Get the file type
+```Python
+import ida_ida
+ida_ida.getinf_str(ida_ida.INF_FILE_FORMAT_NAME)
+```            
+
+# Get the compiler type 
+```Python
+import idaapi
+import ida_ida
+def get_compiler_type():
+    comp_dict = {
+        0x00: 'Unknown',
+        0x01: 'Visual C++',
+        0x02: 'Borland C++',
+        0x03: 'Watcom C++',
+        0x06: 'GNU C++',
+        0x07: 'Visual Age C++',
+        0x08: 'Delphi',
+    }
+    
+    info = idaapi.get_inf_structure()
+    comp_types = list(filter(lambda x: x.startswith('COMP_'), dir(idc)))
+    comp_types.remove('COMP_MASK')
+    comp_type = info.cc.id & idc.COMP_MASK
+    return comp_dict[comp_type]    
+```
+
+
+# Get architecture
+```Python
+import idaapi
+
+info = idaapi.get_inf_structure()
+
+if info.is_64bit():
+    bits = 64
+elif info.is_32bit():
+    bits = 32
+else:
+    bits = 16
+
+try:
+    is_be = info.is_be()
+except:
+    is_be = info.mf
+endian = "big" if is_be else "little"
+
+print('Processor: {info.procName}, {bits}bit, {endian} endian')
+```
 
 ## Get image base, end address, and size
 ```Python
