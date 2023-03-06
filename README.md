@@ -59,6 +59,18 @@ image_end = idc.get_segm_end(segs[-1])
 image_size = idc.get_segm_end(segs[-1]) - image_base
 ```
 
+## Get segment name, start address, and end address
+```Python
+import idautils
+import idc
+def print_section_list():
+    for ea in idautils.Segments():
+        print(f'{idc.get_segm_name(ea)} {ea:x} {idc.get_segm_end(ea):x}')
+        
+print_section_list()
+```
+
+
 ## Get function start address and end address
 ```Python
 ea = idc.get_screen_ea()
